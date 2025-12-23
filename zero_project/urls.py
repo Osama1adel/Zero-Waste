@@ -37,3 +37,5 @@ urlpatterns = [
     path('notifications/', include('apps.notifications.urls')),
     path('ai/', include('apps.ai_engine.urls')),
 ]
+
+# Force reload

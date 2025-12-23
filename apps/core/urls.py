@@ -2,7 +2,7 @@
 from django.urls import path
 from . import views
 from .admin_notifications_views import admin_notifications_dashboard, send_notification_now
-from .saas_notifications_views import saas_notifications_center, send_saved_notification
+from .saas_notifications_views import saas_notifications_center, send_saved_notification, delete_system_update
 
 app_name = 'core'
 
@@ -24,6 +24,7 @@ urlpatterns = [
     # مركز الإشعارات الشامل (للسوبر أدمن في SaaS Dashboard)
     path('saas/notifications/', saas_notifications_center, name='saas_notifications'),
     path('saas/notifications/send/<int:update_id>/', send_saved_notification, name='send_saved_notification'),
+    path('saas/notifications/delete/<int:update_id>/', delete_system_update, name='delete_system_update'),
 ]
 
 

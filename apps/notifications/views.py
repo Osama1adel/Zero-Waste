@@ -1,4 +1,4 @@
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import render, get_object_or_404, redirect
 from django.http import JsonResponse
 from django.contrib.auth.decorators import login_required
 from .models import UserNotification
@@ -38,3 +38,39 @@ def notification_detail(request, notification_id):
     return render(request, 'notifications/detail.html', {
         'notification': notification
     })
+
+
+@login_required(login_url='login')
+def delete_notification(request, notification_id):
+    """حذف إشعار معين"""
+    if request.method == 'POST':
+        try:
+            notification = get_object_or_404(
+                UserNotification,
+                id=notification_id,
+                user=request.user
+            )
+            notification.delete()
+            return JsonResponse({'success': True})
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': str(e)}, status=400)
+    return JsonResponse({'success': False, 'error': 'Invalid request method'}, status=400)
+
+
+@login_required(login_url='login')
+def delete_notification_view(request, notification_id):
+    """حذف إشعار مع إعادة التوجيه (للطلبات العادية)"""
+    if request.method == 'POST':
+        try:
+            notification = get_object_or_404(
+                UserNotification,
+                id=notification_id,
+                user=request.user
+            )
+            notification.delete()
+            # يمكن إضافة رسالة نجاح هنا إذا لزم الأمر
+            # messages.success(request, 'تم حذف الإشعار')
+        except Exception:
+            pass # تجاهل الأخطاء عند الحذف وإعادة التوجيه
+            
+    return redirect(request.META.get('HTTP_REFERER', 'core:dashboard'))

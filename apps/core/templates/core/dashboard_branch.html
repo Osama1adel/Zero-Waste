@@ -108,10 +108,22 @@
                                 <div class="d-flex justify-content-between align-items-center mt-1">
                                     <small class="text-muted" style="font-size: 0.7rem;">{{
                                         notification.created_at|timesince }} مضت</small>
-                                    <a href="{% url 'notifications:detail' notification.id %}"
-                                        class="btn btn-sm btn-outline-primary py-0 px-1" style="font-size: 0.7rem;">
-                                        <i class="bi bi-eye"></i> عرض
-                                    </a>
+                                    <div class="d-flex gap-1">
+                                        <a href="{% url 'notifications:detail' notification.id %}"
+                                            class="btn btn-sm btn-outline-primary py-0 px-1" style="font-size: 0.7rem;">
+                                            <i class="bi bi-eye"></i> عرض
+                                        </a>
+                                        <form method="post"
+                                            action="{% url 'notifications:delete_notification_redirect' notification.id %}"
+                                            onsubmit="return confirm('هل أنت متأكد من حذف هذا الإشعار؟');"
+                                            style="display:inline;">
+                                            {% csrf_token %}
+                                            <button type="submit" class="btn btn-sm btn-outline-danger py-0 px-1"
+                                                style="font-size: 0.7rem;" title="حذف">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </form>
+                                    </div>
                                 </div>
                             </div>
                         </div>

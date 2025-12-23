@@ -36,7 +36,7 @@ class SystemUpdate(models.Model):
     
     title = models.CharField(max_length=200, verbose_name="عنوان الإشعار")
     message = models.TextField(verbose_name="نص الإشعار")
-    scheduled_time = models.DateTimeField(verbose_name="موعد التحديث")
+    scheduled_time = models.DateTimeField(verbose_name="موعد التحديث", null=True, blank=True)
     created_by = models.ForeignKey(
         settings.AUTH_USER_MODEL, 
         on_delete=models.CASCADE,

@@ -21,7 +21,14 @@ def notification_dashboard(request):
         send_notification = request.POST.get('send_notification') == 'on'
         send_now = request.POST.get('send_now') == 'on'
         
-        if title and message and scheduled_time:
+        if title and message:
+            # معالجة التاريخ الفارغ
+            if not scheduled_time:
+                if send_now:
+                    scheduled_time = timezone.now()
+                else:
+                    scheduled_time = None
+            
             update = SystemUpdate.objects.create(
                 title=title,
                 message=message,
@@ -34,7 +41,10 @@ def notification_dashboard(request):
             # إرسال فوراً إذا تم تحديد الخيار
             if send_now:
                 count = send_system_update_notification(update)
-                messages.success(request, f'✅ تم إرسال الإشعار بنجاح إلى {count} مدير')
+                if count > 0:
+                    messages.success(request, f'✅ تم إرسال الإشعار بنجاح إلى {count} مستخدم')
+                else:
+                    messages.warning(request, '⚠️ لم يتم إرسال الإشعار لأي مستخدم. تأكد من وجود مستخدمين مستهدفين وتفعيل خيارات الإرسال.')
             else:
                 messages.success(request, '✅ تم حفظ الإشعار بنجاح. يمكنك إرساله لاحقاً.')
             
@@ -78,7 +88,10 @@ def send_notification_now(request, update_id):
         try:
             update = SystemUpdate.objects.get(id=update_id)
             count = send_system_update_notification(update)
-            messages.success(request, f'✅ تم إرسال الإشعار بنجاح إلى {count} مدير')
+            if count > 0:
+                messages.success(request, f'✅ تم إرسال الإشعار بنجاح إلى {count} مستخدم')
+            else:
+                messages.warning(request, '⚠️ لم يتم إرسال الإشعار لأي مستخدم.')
         except SystemUpdate.DoesNotExist:
             messages.error(request, '❌ الإشعار غير موجود')
     

@@ -141,7 +141,15 @@ def send_system_update_notification(update):
     
     sent_count = 0
     
+    if not target_users.exists():
+        logger.warning(f"No target users found for system update: {update.title}")
+        update.is_sent = True # Mark as 'processed' even if no one got it, to avoid re-sending attempts? Or maybe not. 
+        # Actually better to just return 0 and let the view handle it.
+        update.save()
+        return 0
+
     for user in target_users:
+        user_reached = False
         try:
             # إرسال إيميل إذا كان مفعّل
             if update.send_email and user.email:
@@ -171,8 +179,7 @@ def send_system_update_notification(update):
                     body=plain_message,
                     is_sent=True
                 )
-                
-                sent_count += 1
+                user_reached = True
             
             # إنشاء إشعار داخلي إذا كان مفعّل
             if update.send_notification:
@@ -183,6 +190,10 @@ def send_system_update_notification(update):
                     notification_type='system_update',
                     related_update=update
                 )
+                user_reached = True
+                
+            if user_reached:
+                sent_count += 1
         
         except Exception as e:
             logger.error(f"Failed to send update notification to {user.email if user.email else user.username}: {str(e)}")

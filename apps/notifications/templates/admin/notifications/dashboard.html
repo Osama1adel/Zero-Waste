@@ -239,6 +239,14 @@
             {% csrf_token %}
 
             <div class="form-group">
+                <label for="notification_type">نوع الإشعار *</label>
+                <select id="notification_type" name="notification_type" required>
+                    <option value="system_update">تحديث نظام (موعد مجدول إلزامي)</option>
+                    <option value="general">إشعار عام (موعد مجدول اختياري)</option>
+                </select>
+            </div>
+
+            <div class="form-group">
                 <label for="title">عنوان الإشعار *</label>
                 <input type="text" id="title" name="title" required placeholder="مثال: تحديث مهم للنظام">
             </div>
@@ -249,8 +257,9 @@
             </div>
 
             <div class="form-group">
-                <label for="scheduled_time">موعد التحديث المجدول *</label>
+                <label for="scheduled_time">موعد التحديث المجدول <span id="scheduled_time_required">*</span></label>
                 <input type="datetime-local" id="scheduled_time" name="scheduled_time" required>
+                <small id="scheduled_time_hint" style="color: #666; display: none;">اتركه فارغاً للإرسال الآن</small>
             </div>
 
             <div class="checkbox-group">
@@ -362,4 +371,28 @@
         </table>
     </div>
 </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const typeSelect = document.getElementById('notification_type');
+        const timeInput = document.getElementById('scheduled_time');
+        const timeRequiredMark = document.getElementById('scheduled_time_required');
+        const timeHint = document.getElementById('scheduled_time_hint');
+
+        function updateFormState() {
+            if (typeSelect.value === 'general') {
+                timeInput.required = false;
+                timeRequiredMark.style.display = 'none';
+                timeHint.style.display = 'block';
+            } else {
+                timeInput.required = true;
+                timeRequiredMark.style.display = 'inline';
+                timeHint.style.display = 'none';
+            }
+        }
+
+        typeSelect.addEventListener('change', updateFormState);
+        updateFormState(); // Initial state
+    });
+</script>
 {% endblock %}
