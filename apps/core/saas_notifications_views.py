@@ -27,7 +27,14 @@ def saas_notifications_center(request):
             target_type = request.POST.get('target_type', 'managers')
             selected_users = request.POST.getlist('selected_users')
             
-            if title and message and scheduled_time:
+            if title and message:
+                # معالجة التاريخ الفارغ
+                if not scheduled_time:
+                    if send_now:
+                        scheduled_time = timezone.now()
+                    else:
+                        scheduled_time = None
+
                 update = SystemUpdate.objects.create(
                     title=title,
                     message=message,
@@ -82,6 +89,7 @@ def saas_notifications_center(request):
         'all_users': all_users,
         'managers': managers,
         'support_tickets': support_tickets,
+        'unread_notifications_count': stats['unread_notifications'], # Added for compatibility
     }
     
     return render(request, 'core/saas_notifications_center.html', context)
@@ -96,6 +104,21 @@ def send_saved_notification(request, update_id):
             update = SystemUpdate.objects.get(id=update_id)
             count = send_system_update_notification(update)
             messages.success(request, f'✅ تم إرسال الإشعار بنجاح إلى {count} مستخدم')
+        except SystemUpdate.DoesNotExist:
+            messages.error(request, '❌ الإشعار غير موجود')
+    
+    return redirect('core:saas_notifications')
+
+
+@login_required
+@user_passes_test(lambda u: u.is_superuser, login_url='login')
+def delete_system_update(request, update_id):
+    """حذف إشعار نظام"""
+    if request.method == 'POST':
+        try:
+            update = SystemUpdate.objects.get(id=update_id)
+            update.delete()
+            messages.success(request, '✅ تم حذف الإشعار بنجاح')
         except SystemUpdate.DoesNotExist:
             messages.error(request, '❌ الإشعار غير موجود')
     

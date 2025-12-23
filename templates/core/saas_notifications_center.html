@@ -109,6 +109,16 @@
                         <input type="hidden" name="action" value="send_notification">
 
                         <div class="row">
+                            <div class="col-md-12 mb-3">
+                                <label class="form-label fw-bold">نوع الإشعار *</label>
+                                <select class="form-select" id="notification_type" name="notification_type" required>
+                                    <option value="system_update">تحديث نظام (موعد مجدول إلزامي)</option>
+                                    <option value="general">إشعار عام (موعد مجدول اختياري)</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label class="form-label fw-bold">عنوان الإشعار *</label>
                                 <input type="text" class="form-control" name="title" required
@@ -116,8 +126,11 @@
                             </div>
 
                             <div class="col-md-6 mb-3">
-                                <label class="form-label fw-bold">موعد التحديث المجدول *</label>
-                                <input type="datetime-local" class="form-control" name="scheduled_time" required>
+                                <label class="form-label fw-bold">موعد التحديث المجدول <span
+                                        id="scheduled_time_required">*</span></label>
+                                <input type="datetime-local" class="form-control" id="scheduled_time"
+                                    name="scheduled_time" required>
+                                <small id="scheduled_time_hint" class="text-muted" style="display: none;"></small>
                             </div>
                         </div>
 
@@ -140,8 +153,7 @@
                                 <input type="radio" class="btn-check" name="target_type" id="target_managers"
                                     value="managers" autocomplete="off" checked>
                                 <label class="btn btn-outline-primary" for="target_managers">
-                                    <i class="bi bi-person-badge"></i> المدراء فقط ({{
-                                    stats.total_managers|add:stats.total_branch_managers }})
+                                    <i class="bi bi-person-badge"></i> المدراء فقط
                                 </label>
 
                                 <input type="radio" class="btn-check" name="target_type" id="target_selected"
@@ -247,17 +259,26 @@
                                         {% endif %}
                                     </td>
                                     <td>
-                                        {% if not update.is_sent %}
-                                        <form method="post" action="{% url 'core:send_saved_notification' update.id %}"
-                                            style="display: inline;">
-                                            {% csrf_token %}
-                                            <button type="submit" class="btn btn-sm btn-success">
-                                                <i class="bi bi-send"></i> إرسال
-                                            </button>
-                                        </form>
-                                        {% else %}
-                                        -
-                                        {% endif %}
+                                        <div class="d-flex gap-1 justify-content-end">
+                                            {% if not update.is_sent %}
+                                            <form method="post"
+                                                action="{% url 'core:send_saved_notification' update.id %}">
+                                                {% csrf_token %}
+                                                <button type="submit" class="btn btn-sm btn-success" title="إرسال">
+                                                    <i class="bi bi-send"></i>
+                                                </button>
+                                            </form>
+                                            {% endif %}
+
+                                            <form method="post" action="{% url 'core:delete_system_update' update.id %}"
+                                                onsubmit="return confirm('هل أنت متأكد من حذف هذا الإشعار؟');">
+                                                {% csrf_token %}
+                                                <button type="submit" class="btn btn-sm btn-danger text-white"
+                                                    title="حذف">
+                                                    <i class="bi bi-trash"></i>
+                                                </button>
+                                            </form>
+                                        </div>
                                     </td>
                                 </tr>
                                 {% empty %}
@@ -455,6 +476,31 @@
                 document.getElementById('selected_users').required = false;
             }
         });
+    });
+
+    // التحكم في خيار نوع الإشعار (تحديث نظام vs إشعار عام)
+    document.addEventListener('DOMContentLoaded', function () {
+        const typeSelect = document.getElementById('notification_type');
+        const timeInput = document.getElementById('scheduled_time');
+        const timeRequiredMark = document.getElementById('scheduled_time_required');
+        const timeHint = document.getElementById('scheduled_time_hint');
+
+        if (typeSelect && timeInput) {
+            function updateFormState() {
+                if (typeSelect.value === 'general') {
+                    timeInput.required = false;
+                    timeRequiredMark.style.display = 'none';
+                    // timeHint.style.display = 'block';
+                } else {
+                    timeInput.required = true;
+                    timeRequiredMark.style.display = 'inline';
+                    timeHint.style.display = 'none';
+                }
+            }
+
+            typeSelect.addEventListener('change', updateFormState);
+            updateFormState(); // Initial state
+        }
     });
 </script>
 {% endblock %}

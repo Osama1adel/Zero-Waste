@@ -91,6 +91,8 @@
                                 <i class="bi bi-hand-thumbs-up text-success fs-4"></i>
                                 {% elif notification.notification_type == 'alert' %}
                                 <i class="bi bi-exclamation-triangle text-warning fs-4"></i>
+                                {% elif notification.notification_type == 'report' %}
+                                <i class="bi bi-file-earmark-text text-primary fs-4"></i>
                                 {% else %}
                                 <i class="bi bi-info-circle text-primary fs-4"></i>
                                 {% endif %}
@@ -101,10 +103,22 @@
                                 <div class="d-flex justify-content-between align-items-center mt-2">
                                     <small class="text-muted" style="font-size: 0.75rem;">{{
                                         notification.created_at|timesince }} مضت</small>
-                                    <a href="{% url 'notifications:detail' notification.id %}"
-                                        class="btn btn-sm btn-outline-primary py-0 px-2">
-                                        <i class="bi bi-eye"></i> عرض التفاصيل
-                                    </a>
+                                    <div class="d-flex gap-1">
+                                        <a href="{% url 'notifications:detail' notification.id %}"
+                                            class="btn btn-sm btn-outline-primary py-0 px-2" title="عرض التفاصيل">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                        <form method="post"
+                                            action="{% url 'notifications:delete_notification_redirect' notification.id %}"
+                                            onsubmit="return confirm('هل أنت متأكد من حذف هذا الإشعار؟');"
+                                            style="display:inline;">
+                                            {% csrf_token %}
+                                            <button type="submit" class="btn btn-sm btn-outline-danger py-0 px-2"
+                                                title="حذف">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </form>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -147,349 +161,29 @@
             </div>
         </div>
     </div>
+</div>
 
-    <style>
-        .notification-item {
-            transition: all 0.2s;
-        }
+<style>
+    .notification-item {
+        transition: all 0.2s;
+    }
 
-        .notification-item:hover {
-            background-color: #e9ecef !important;
-            transform: translateX(-3px);
-        }
+    .notification-item:hover {
+        background-color: #e9ecef !important;
+        transform: translateX(-3px);
+    }
 
-        .notification-item.unread {
-            background-color: #e3f2fd !important;
-            border-right: 3px solid #2196f3 !important;
-        }
+    .notification-item.unread {
+        background-color: #e3f2fd !important;
+        border-right: 3px solid #2196f3 !important;
+    }
 
-        .notification-item.stock-alert {
-            border-right: 3px solid #ffc107 !important;
-        }
-    </style>
+    .notification-item.stock-alert {
+        border-right: 3px solid #ffc107 !important;
+    }
+</style>
 
-    <div class="row my-5">
-        <!-- الرسم البياني وقائمة الطلبات -->
-        <div class="col-lg-8">
-            <div class="content-panel h-100">
-                <h5 class="fw-bold mb-4">📊 تحليل الهدر (آخر العمليات)</h5>
-                <div class="table-responsive">
-                    <table class="table table-custom align-middle">
-                        <thead class="bg-light">
-                            <tr>
-                                <th>الفرع</th>
-                                <th>تاريخ التقرير</th>
-                                <th>قيمة الهدر</th>
-                                <th>التفاصيل</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for report in latest_reports %}
-                            <tr>
-                                <td class="fw-bold">{{ report.branch.name }}</td>
-                                <td>{{ report.generated_date|date:"Y-m-d H:i" }}</td>
-                                <td class="text-danger fw-bold">{{ report.total_waste_value }} ر.س</td>
-                                <td>
-                                    <button class="btn btn-sm btn-outline-secondary">عرض</button>
-                                </td>
-                            </tr>
-                            {% empty %}
-                            <tr>
-                                <td colspan="4" class="text-center text-muted py-4">لا توجد تقارير هدر مسجلة.</td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-lg-4">
-            <div class="content-panel h-100">
-                <h5 class="fw-bold mb-4">
-                    {% if is_manager %}
-                    ⚡ طلبات الفروع
-                    {% else %}
-                    ⚡ طلباتي المرسلة
-                    {% endif %}
-                </h5>
-
-                {% if is_manager %}
-                <!-- قائمة موافقة المدير -->
-                <div class="list-group list-group-flush">
-                    {% for req in pending_requests %}
-                    <div class="list-group-item px-0">
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <span class="fw-bold">{{ req.branch.name }}</span>
-                            <small class="text-muted">{{ req.created_at|date:"m-d" }}</small>
-                        </div>
-                        <p class="mb-2 text-muted small">{{ req.type }}</p>
-                        <a href="/operations/review/{{ req.id }}/approve/"
-                            class="btn btn-sm btn-success w-100 rounded-pill">
-                            موافقة
-                        </a>
-                    </div>
-                    {% empty %}
-                    <div class="text-center py-4 text-muted">
-                        <i class="bi bi-check2-all fs-1"></i>
-                        <p class="mt-2 text-small">جميع الطلبات معالجة</p>
-                    </div>
-                    {% endfor %}
-                </div>
-
-                {% else %}
-                <!-- قائمة عرض فقط لمدير الفرع -->
-                <div class="list-group list-group-flush">
-                    {% for req in my_requests %}
-                    <div class="list-group-item px-0 d-flex justify-content-between align-items-center">
-                        <div>
-                            <strong>{{ req.type }}</strong>
-                            <br>
-                            <small class="text-muted">{{ req.created_at|date:"m-d" }}</small>
-                        </div>
-                        {% if req.status == 'PENDING' %}
-                        <span class="badge bg-warning text-dark">انتظار</span>
-                        {% elif req.status == 'APPROVED' %}
-                        <span class="badge bg-success">مقبول</span>
-                        {% else %}
-                        <span class="badge bg-danger">مرفوض</span>
-                        {% endif %}
-                    </div>
-                    {% empty %}
-                    <div class="text-center py-4 text-muted">
-                        لم يتم إرسال أي طلبات.
-                    </div>
-                    {% endfor %}
-                </div>
-                <div class="mt-3 text-center">
-                    <button class="btn btn-outline-primary btn-sm w-100">طلب جديد</button>
-                </div>
-                {% endif %}
-            </div>
-        </div>
-    </div>
-
-    <!-- AI Analysis Center Section (Added as per request) -->
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
-                <div class="card-header bg-white border-0 py-3 d-flex justify-content-between align-items-center">
-                    <h5 class="fw-bold m-0 text-primary">
-                        <i class="bi bi-robot me-2"></i> مركز تحليلات الذكاء الاصطناعي
-                    </h5>
-                    <!-- Button triggers modal -->
-                    <button type="button" class="btn btn-primary rounded-pill px-4 shadow-sm" data-bs-toggle="modal"
-                        data-bs-target="#branchSelectionModal">
-                        <i class="bi bi-stars me-2"></i> تحليل جديد
-                    </button>
-                </div>
-                <div class="card-body bg-light bg-opacity-50" id="aiPanelBody">
-
-                    <!-- 1. Empty State -->
-                    <div id="aiEmptyState" class="text-center py-5">
-                        <div class="mb-3">
-                            <i class="bi bi-robot fs-1 text-muted opacity-50"></i>
-                        </div>
-                        <h5 class="text-muted fw-bold">لا توجد تحليلات ذكية حالياً</h5>
-                        <p class="text-muted small">اختر فرعاً واضغط "تحليل" لاكتشاف فرص تقليل الهدر</p>
-                    </div>
-
-                    <!-- 2. Loading State -->
-                    <div id="aiLoadingState" class="text-center py-5 d-none">
-                        <div class="spinner-border text-primary mb-3" role="status">
-                            <span class="visually-hidden">Loading...</span>
-                        </div>
-                        <h5 class="fw-bold text-primary">جاري تحليل البيانات...</h5>
-                        <p class="text-muted small">يقوم الذكاء الاصطناعي بمراجعة سجلات الهدر والمخزون</p>
-                    </div>
-
-                    <!-- 3. Results State -->
-                    <div id="aiResultsState" class="d-none animate__animated animate__fadeIn">
-                        <div class="row align-items-center">
-                            <!-- Chart -->
-                            <div class="col-md-4 text-center border-end">
-                                <h6 class="text-muted mb-3"><i class="bi bi-pie-chart me-1"></i> توزيع المخاطر حسب الفئة
-                                </h6>
-                                <div style="height: 200px; position: relative;" class="d-flex justify-content-center">
-                                    <canvas id="aiRiskChart"></canvas>
-                                </div>
-                                <p class="mt-3 text-muted small">الأصناف الأكثر عرضة للهدر (7 أيام)</p>
-                            </div>
-
-                            <!-- Text Analysis -->
-                            <div class="col-md-8 ps-md-4">
-                                <div class="d-flex justify-content-between align-items-center mb-3">
-                                    <span
-                                        class="badge bg-danger bg-opacity-10 text-danger border border-danger px-3 py-2 rounded-pill"
-                                        id="aiRiskLevelBadge">High Risk</span>
-                                    <small class="text-muted" id="aiDate">00:00 2025-01-01</small>
-                                </div>
-
-                                <h5 class="fw-bold mb-3 lh-base" id="aiVerdict">
-                                    <!-- Verdict Text -->
-                                </h5>
-
-                                <div class="alert alert-light border rounded-3 p-3 mb-0">
-                                    <h6 class="fw-bold text-warning mb-2"><i class="bi bi-lightbulb me-2"></i> التوصيات
-                                        الذكية:</h6>
-                                    <ul class="list-unstyled mb-0" id="aiRecommendations">
-                                        <!-- Recommendations List -->
-                                    </ul>
-                                </div>
-
-                                <div class="mt-3 d-flex justify-content-end align-items-center">
-                                    <div class="text-end">
-                                        <small class="text-muted d-block">قيمة الهدر المتوقع</small>
-                                        <h4 class="fw-bold text-danger m-0" id="aiTotalRisk">0.00 ر.س</h4>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal for Branch Selection -->
-    <div class="modal fade" id="branchSelectionModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content rounded-4 border-0 shadow">
-                <div class="modal-header border-0">
-                    <h5 class="modal-title fw-bold">اختر النطاق للتحليل</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <p class="text-muted small mb-3">حدد الفرع الذي تريد من الذكاء الاصطناعي تحليل بياناته:</p>
-                    <select class="form-select form-select-lg mb-3" id="aiBranchSelect">
-                        <option value="" selected>🏢 كل الشركة (تحليل شامل)</option>
-                        {% for branch in branches %}
-                        <option value="{{ branch.id }}">📍 {{ branch.name }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-                <div class="modal-footer border-0">
-                    <button type="button" class="btn btn-light rounded-pill" data-bs-dismiss="modal">إلغاء</button>
-                    <button type="button" class="btn btn-primary rounded-pill px-4" onclick="confirmAIAnalysis()">
-                        ابدأ التحليل 🚀
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <script>
-        function confirmAIAnalysis() {
-            // Get selected branch ID
-            const branchId = document.getElementById('aiBranchSelect').value;
-
-            // Hide Modal manually properly
-            const modalEl = document.getElementById('branchSelectionModal');
-            const modal = bootstrap.Modal.getInstance(modalEl);
-            modal.hide();
-
-            // Run Analysis
-            runAIAnalysis(branchId);
-        }
-
-        async function runAIAnalysis(branchId = "") {
-            // UI Updates
-            document.getElementById('aiEmptyState').classList.add('d-none');
-            document.getElementById('aiResultsState').classList.add('d-none');
-            document.getElementById('aiLoadingState').classList.remove('d-none');
-
-            try {
-                // Build URL with params
-                let url = "{% url 'analytics:magic_ai_advice_api' %}?t=" + new Date().getTime();
-                if (branchId) {
-                    url += "&branch_id=" + branchId;
-                }
-
-                const response = await fetch(url);
-                const text = await response.text();
-
-                let data;
-                try {
-                    data = JSON.parse(text);
-                } catch (e) {
-                    console.error("Non-JSON response:", text);
-                    alert("خطأ في الخادم (غير متوقع): " + text.substring(0, 200)); // Show beginning of HTML error
-                    resetAIState();
-                    return;
-                }
-
-                if (data.error) {
-                    if (data.error.includes("429") || data.error.includes("Quota")) {
-                        alert("⚠️ تنبيه: تم تجاوز حد الاستخدام المجاني لخدمة الذكاء الاصطناعي (Quota Exceeded).\nيرجى المحاولة لاحقاً.");
-                    } else {
-                        alert('خطأ: ' + data.error);
-                    }
-                    resetAIState();
-                    return;
-                }
-
-                // Populate Data
-                document.getElementById('aiVerdict').textContent = data.performance_verdict || "تحليل شامل للهدر";
-                document.getElementById('aiTotalRisk').textContent = (data.financial_impact?.total_risk_value || 0) + ' ر.س';
-                document.getElementById('aiRiskLevelBadge').textContent = data.financial_impact?.risk_level || 'Normal';
-
-                // Recommendations
-                const recList = document.getElementById('aiRecommendations');
-                recList.innerHTML = '';
-                if (data.recommendations) {
-                    data.recommendations.forEach(rec => {
-                        const li = document.createElement('li');
-                        li.className = 'mb-2 d-flex align-items-start';
-                        li.innerHTML = `<i class="bi bi-check-circle-fill text-success me-2 mt-1"></i> <span>${rec}</span>`;
-                        recList.appendChild(li);
-                    });
-                }
-
-                // Chart
-                if (data.category_breakdown) {
-                    const ctx = document.getElementById('aiRiskChart').getContext('2d');
-
-                    // Destroy old chart if exists (simple check)
-                    if (window.aiChartInstance) window.aiChartInstance.destroy();
-
-                    window.aiChartInstance = new Chart(ctx, {
-                        type: 'doughnut',
-                        data: {
-                            labels: Object.keys(data.category_breakdown),
-                            datasets: [{
-                                data: Object.values(data.category_breakdown),
-                                backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF'],
-                                borderWidth: 0
-                            }]
-                        },
-                        options: {
-                            responsive: true,
-                            maintainAspectRatio: false,
-                            plugins: {
-                                legend: { display: false } // Hide legend to match clean look
-                            },
-                            cutout: '70%'
-                        }
-                    });
-                }
-
-                // Show Results
-                document.getElementById('aiLoadingState').classList.add('d-none');
-                document.getElementById('aiResultsState').classList.remove('d-none');
-
-            } catch (error) {
-                console.error(error);
-                alert("خطأ في الاتصال (JS Error): " + error.message);
-                resetAIState();
-            }
-        }
-
-        function resetAIState() {
-            document.getElementById('aiLoadingState').classList.add('d-none');
-            document.getElementById('aiEmptyState').classList.remove('d-none');
-        }
-    </script>
+<div class="row my-5">
     <!-- الرسم البياني وقائمة الطلبات -->
     <div class="col-lg-8">
         <div class="content-panel h-100">
@@ -525,6 +219,290 @@
         </div>
     </div>
 
+    <div class="col-lg-4">
+        <div class="content-panel h-100">
+            <h5 class="fw-bold mb-4">
+                {% if is_manager %}
+                ⚡ طلبات الفروع
+                {% else %}
+                ⚡ طلباتي المرسلة
+                {% endif %}
+            </h5>
 
+            {% if is_manager %}
+            <!-- قائمة موافقة المدير -->
+            <div class="list-group list-group-flush">
+                {% for req in pending_requests %}
+                <div class="list-group-item px-0">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="fw-bold">{{ req.branch.name }}</span>
+                        <small class="text-muted">{{ req.created_at|date:"m-d" }}</small>
+                    </div>
+                    <p class="mb-2 text-muted small">{{ req.type }}</p>
+                    <a href="/operations/review/{{ req.id }}/approve/"
+                        class="btn btn-sm btn-success w-100 rounded-pill">
+                        موافقة
+                    </a>
+                </div>
+                {% empty %}
+                <div class="text-center py-4 text-muted">
+                    <i class="bi bi-check2-all fs-1"></i>
+                    <p class="mt-2 text-small">جميع الطلبات معالجة</p>
+                </div>
+                {% endfor %}
+            </div>
+
+            {% else %}
+            <!-- قائمة عرض فقط لمدير الفرع -->
+            <div class="list-group list-group-flush">
+                {% for req in my_requests %}
+                <div class="list-group-item px-0 d-flex justify-content-between align-items-center">
+                    <div>
+                        <strong>{{ req.type }}</strong>
+                        <br>
+                        <small class="text-muted">{{ req.created_at|date:"m-d" }}</small>
+                    </div>
+                    {% if req.status == 'PENDING' %}
+                    <span class="badge bg-warning text-dark">انتظار</span>
+                    {% elif req.status == 'APPROVED' %}
+                    <span class="badge bg-success">مقبول</span>
+                    {% else %}
+                    <span class="badge bg-danger">مرفوض</span>
+                    {% endif %}
+                </div>
+                {% empty %}
+                <div class="text-center py-4 text-muted">
+                    لم يتم إرسال أي طلبات.
+                </div>
+                {% endfor %}
+            </div>
+            <div class="mt-3 text-center">
+                <button class="btn btn-outline-primary btn-sm w-100">طلب جديد</button>
+            </div>
+            {% endif %}
+        </div>
+    </div>
 </div>
+
+<!-- AI Analysis Center Section -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+            <div class="card-header bg-white border-0 py-3 d-flex justify-content-between align-items-center">
+                <h5 class="fw-bold m-0 text-primary">
+                    <i class="bi bi-robot me-2"></i> مركز تحليلات الذكاء الاصطناعي
+                </h5>
+                <!-- Button triggers modal -->
+                <button type="button" class="btn btn-primary rounded-pill px-4 shadow-sm" data-bs-toggle="modal"
+                    data-bs-target="#branchSelectionModal">
+                    <i class="bi bi-stars me-2"></i> تحليل جديد
+                </button>
+            </div>
+            <div class="card-body bg-light bg-opacity-50" id="aiPanelBody">
+
+                <!-- 1. Empty State -->
+                <div id="aiEmptyState" class="text-center py-5">
+                    <div class="mb-3">
+                        <i class="bi bi-robot fs-1 text-muted opacity-50"></i>
+                    </div>
+                    <h5 class="text-muted fw-bold">لا توجد تحليلات ذكية حالياً</h5>
+                    <p class="text-muted small">اختر فرعاً واضغط "تحليل" لاكتشاف فرص تقليل الهدر</p>
+                </div>
+
+                <!-- 2. Loading State -->
+                <div id="aiLoadingState" class="text-center py-5 d-none">
+                    <div class="spinner-border text-primary mb-3" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <h5 class="fw-bold text-primary">جاري تحليل البيانات...</h5>
+                    <p class="text-muted small">يقوم الذكاء الاصطناعي بمراجعة سجلات الهدر والمخزون</p>
+                </div>
+
+                <!-- 3. Results State -->
+                <div id="aiResultsState" class="d-none animate__animated animate__fadeIn">
+                    <div class="row align-items-center">
+                        <!-- Chart -->
+                        <div class="col-md-4 text-center border-end">
+                            <h6 class="text-muted mb-3"><i class="bi bi-pie-chart me-1"></i> توزيع المخاطر حسب الفئة
+                            </h6>
+                            <div style="height: 200px; position: relative;" class="d-flex justify-content-center">
+                                <canvas id="aiRiskChart"></canvas>
+                            </div>
+                            <p class="mt-3 text-muted small">الأصناف الأكثر عرضة للهدر (7 أيام)</p>
+                        </div>
+
+                        <!-- Text Analysis -->
+                        <div class="col-md-8 ps-md-4">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <span
+                                    class="badge bg-danger bg-opacity-10 text-danger border border-danger px-3 py-2 rounded-pill"
+                                    id="aiRiskLevelBadge">High Risk</span>
+                                <small class="text-muted" id="aiDate">00:00 2025-01-01</small>
+                            </div>
+
+                            <h5 class="fw-bold mb-3 lh-base" id="aiVerdict">
+                                <!-- Verdict Text -->
+                            </h5>
+
+                            <div class="alert alert-light border rounded-3 p-3 mb-0">
+                                <h6 class="fw-bold text-warning mb-2"><i class="bi bi-lightbulb me-2"></i> التوصيات
+                                    الذكية:</h6>
+                                <ul class="list-unstyled mb-0" id="aiRecommendations">
+                                    <!-- Recommendations List -->
+                                </ul>
+                            </div>
+
+                            <div class="mt-3 d-flex justify-content-end align-items-center">
+                                <div class="text-end">
+                                    <small class="text-muted d-block">قيمة الهدر المتوقع</small>
+                                    <h4 class="fw-bold text-danger m-0" id="aiTotalRisk">0.00 ر.س</h4>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal for Branch Selection -->
+<div class="modal fade" id="branchSelectionModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content rounded-4 border-0 shadow">
+            <div class="modal-header border-0">
+                <h5 class="modal-title fw-bold">اختر النطاق للتحليل</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p class="text-muted small mb-3">حدد الفرع الذي تريد من الذكاء الاصطناعي تحليل بياناته:</p>
+                <select class="form-select form-select-lg mb-3" id="aiBranchSelect">
+                    <option value="" selected>🏢 كل الشركة (تحليل شامل)</option>
+                    {% for branch in branches %}
+                    <option value="{{ branch.id }}">📍 {{ branch.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-light rounded-pill" data-bs-dismiss="modal">إلغاء</button>
+                <button type="button" class="btn btn-primary rounded-pill px-4" onclick="confirmAIAnalysis()">
+                    ابدأ التحليل 🚀
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function confirmAIAnalysis() {
+        // Get selected branch ID
+        const branchId = document.getElementById('aiBranchSelect').value;
+
+        // Hide Modal manually properly
+        const modalEl = document.getElementById('branchSelectionModal');
+        const modal = bootstrap.Modal.getInstance(modalEl);
+        modal.hide();
+
+        // Run Analysis
+        runAIAnalysis(branchId);
+    }
+
+    async function runAIAnalysis(branchId = "") {
+        // UI Updates
+        document.getElementById('aiEmptyState').classList.add('d-none');
+        document.getElementById('aiResultsState').classList.add('d-none');
+        document.getElementById('aiLoadingState').classList.remove('d-none');
+
+        try {
+            // Build URL with params
+            let url = "{% url 'analytics:magic_ai_advice_api' %}?t=" + new Date().getTime();
+            if (branchId) {
+                url += "&branch_id=" + branchId;
+            }
+
+            const response = await fetch(url);
+            const text = await response.text();
+
+            let data;
+            try {
+                data = JSON.parse(text);
+            } catch (e) {
+                console.error("Non-JSON response:", text);
+                alert("خطأ في الخادم (غير متوقع): " + text.substring(0, 200));
+                resetAIState();
+                return;
+            }
+
+            if (data.error) {
+                if (data.error.includes("429") || data.error.includes("Quota")) {
+                    alert("⚠️ تنبيه: تم تجاوز حد الاستخدام المجاني لخدمة الذكاء الاصطناعي (Quota Exceeded).\nيرجى المحاولة لاحقاً.");
+                } else {
+                    alert('خطأ: ' + data.error);
+                }
+                resetAIState();
+                return;
+            }
+
+            // Populate Data
+            document.getElementById('aiVerdict').textContent = data.performance_verdict || "تحليل شامل للهدر";
+            document.getElementById('aiTotalRisk').textContent = (data.financial_impact?.total_risk_value || 0) + ' ر.س';
+            document.getElementById('aiRiskLevelBadge').textContent = data.financial_impact?.risk_level || 'Normal';
+
+            // Recommendations
+            const recList = document.getElementById('aiRecommendations');
+            recList.innerHTML = '';
+            if (data.recommendations) {
+                data.recommendations.forEach(rec => {
+                    const li = document.createElement('li');
+                    li.className = 'mb-2 d-flex align-items-start';
+                    li.innerHTML = `<i class="bi bi-check-circle-fill text-success me-2 mt-1"></i> <span>${rec}</span>`;
+                    recList.appendChild(li);
+                });
+            }
+
+            // Chart
+            if (data.category_breakdown) {
+                const ctx = document.getElementById('aiRiskChart').getContext('2d');
+
+                // Destroy old chart if exists
+                if (window.aiChartInstance) window.aiChartInstance.destroy();
+
+                window.aiChartInstance = new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: Object.keys(data.category_breakdown),
+                        datasets: [{
+                            data: Object.values(data.category_breakdown),
+                            backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF'],
+                            borderWidth: 0
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: false }
+                        },
+                        cutout: '70%'
+                    }
+                });
+            }
+
+            // Show Results
+            document.getElementById('aiLoadingState').classList.add('d-none');
+            document.getElementById('aiResultsState').classList.remove('d-none');
+
+        } catch (error) {
+            console.error(error);
+            alert("خطأ في الاتصال (JS Error): " + error.message);
+            resetAIState();
+        }
+    }
+
+    function resetAIState() {
+        document.getElementById('aiLoadingState').classList.add('d-none');
+        document.getElementById('aiEmptyState').classList.remove('d-none');
+    }
+</script>
 {% endblock %}

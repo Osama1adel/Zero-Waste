@@ -90,10 +90,10 @@ def _company_dashboard(request):
 # --- BRANCH DASHBOARD ---
 def _branch_dashboard(request):
     # Check if user has a branch
-    if not hasattr(request.user, 'branch') or not request.user.branch:
+    if not hasattr(request.user, 'managed_branch') or not request.user.managed_branch:
         return render(request, 'core/dashboard_empty.html', {'error': 'No branch assigned'})
     
-    branch = request.user.branch
+    branch = request.user.managed_branch
 
     # Stats
     total_waste = WasteReport.objects.filter(branch=branch).aggregate(Sum('total_waste_value'))['total_waste_value__sum'] or 0
