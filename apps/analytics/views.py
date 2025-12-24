@@ -133,7 +133,43 @@ def waste_list(request):
     elif hasattr(request.user, 'managed_branch') and request.user.managed_branch:
         logs = logs.filter(branch=request.user.managed_branch)
         
-    return render(request, 'analytics/waste_list.html', {'logs': logs})
+    # Filter by Product Name
+    search_query = request.GET.get('search', '')
+    if search_query:
+        logs = logs.filter(product__name__icontains=search_query)
+
+    # Filter by Branch (Manager/Admin Only)
+    branch_id = request.GET.get('branch')
+    if branch_id and (request.user.role == 'manager' or request.user.is_superuser):
+        logs = logs.filter(branch_id=branch_id)
+        
+    # Filter by Reason
+    reason = request.GET.get('reason')
+    if reason:
+        logs = logs.filter(reason=reason)
+
+    # Filter by Date Range
+    date_from = request.GET.get('date_from')
+    date_to = request.GET.get('date_to')
+    if date_from:
+        logs = logs.filter(created_at__date__gte=date_from)
+    if date_to:
+        logs = logs.filter(created_at__date__lte=date_to)
+
+    # Context Data
+    branches = []
+    if request.user.is_superuser:
+        branches = Branch.objects.all()
+    elif request.user.role == 'manager' and hasattr(request.user, 'managed_company'):
+        branches = request.user.managed_company.branches.all()
+
+    context = {
+        'logs': logs,
+        'branches': branches,
+        'waste_reasons': WasteLog.WASTE_REASONS,
+    }
+        
+    return render(request, 'analytics/waste_list.html', context)
 
 def reduction_suggestions(request):
     """

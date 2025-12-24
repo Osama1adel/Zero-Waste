@@ -13,6 +13,60 @@
         </a>
     </div>
 
+    <div class="card border-0 shadow-sm rounded-4 mb-4">
+        <div class="card-body bg-light bg-opacity-50">
+            <form method="GET" class="row g-3">
+                <!-- Product Search -->
+                <div class="col-md-3">
+                    <label class="form-label text-muted small fw-bold">{{ "المنتج"|smart_trans }}</label>
+                    <input type="text" name="search" class="form-control" placeholder="بحث بالاسم..." value="{{ request.GET.search }}">
+                </div>
+
+                <!-- Branch Filter -->
+                {% if branches %}
+                <div class="col-md-2">
+                    <label class="form-label text-muted small fw-bold">{{ "الفرع"|smart_trans }}</label>
+                    <select name="branch" class="form-select">
+                        <option value="">{{ "الكل"|smart_trans }}</option>
+                        {% for branch in branches %}
+                        <option value="{{ branch.id }}" {% if request.GET.branch == branch.id|stringformat:"s" %}selected{% endif %}>{{ branch.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                {% endif %}
+
+                <!-- Reason Filter -->
+                <div class="col-md-2">
+                    <label class="form-label text-muted small fw-bold">{{ "سبب الهدر"|smart_trans }}</label>
+                    <select name="reason" class="form-select">
+                        <option value="">{{ "الكل"|smart_trans }}</option>
+                        {% for code, label in waste_reasons %}
+                        <option value="{{ code }}" {% if request.GET.reason == code %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Date Range -->
+                <div class="col-md-3">
+                    <label class="form-label text-muted small fw-bold">{{ "التاريخ"|smart_trans }}</label>
+                    <div class="input-group">
+                        <input type="date" name="date_from" class="form-control" value="{{ request.GET.date_from }}" placeholder="من">
+                        <span class="input-group-text">-</span>
+                        <input type="date" name="date_to" class="form-control" value="{{ request.GET.date_to }}" placeholder="إلى">
+                    </div>
+                </div>
+
+                <!-- Buttons -->
+                <div class="col-md-2 d-flex align-items-end">
+                    <div class="d-flex w-100 gap-2">
+                        <button type="submit" class="btn btn-primary flex-grow-1">{{ "تصفية"|smart_trans }}</button>
+                        <a href="{% url 'analytics:waste_list' %}" class="btn btn-outline-secondary"><i class="bi bi-x-lg"></i></a>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <div class="card border-0 shadow-sm rounded-4">
         <div class="card-body p-0">
             <div class="table-responsive">

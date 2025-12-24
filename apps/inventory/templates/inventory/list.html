@@ -13,6 +13,52 @@
 </nav>
 
     <div class="container-fluid px-4">
+        <!-- Filter Section -->
+        <div class="card border-0 shadow-sm mb-4 rounded-4">
+            <div class="card-body bg-light bg-opacity-50">
+                <form method="GET" class="row g-3">
+                    <!-- Search -->
+                    <div class="col-md-4">
+                        <label class="form-label text-muted small fw-bold">{{ "بحث عن منتج"|smart_trans }}</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-white border-end-0"><i class="bi bi-search"></i></span>
+                            <input type="text" name="search" class="form-control border-start-0" placeholder="Product Name..." value="{{ request.GET.search }}">
+                        </div>
+                    </div>
+
+                    <!-- Branch Filter (Manager Only) -->
+                    {% if branches %}
+                    <div class="col-md-3">
+                        <label class="form-label text-muted small fw-bold">{{ "الفرع"|smart_trans }}</label>
+                        <select name="branch" class="form-select">
+                            <option value="">{{ "كل الفروع"|smart_trans }}</option>
+                            {% for branch in branches %}
+                            <option value="{{ branch.id }}" {% if request.GET.branch == branch.id|stringformat:"s" %}selected{% endif %}>{{ branch.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    {% endif %}
+
+                    <!-- Status Filter -->
+                    <div class="col-md-3">
+                        <label class="form-label text-muted small fw-bold">{{ "الحالة"|smart_trans }}</label>
+                        <select name="status" class="form-select">
+                            <option value="">{{ "الكل"|smart_trans }}</option>
+                            <option value="safe" {% if request.GET.status == 'safe' %}selected{% endif %}>{{ "سليم"|smart_trans }} (Safe)</option>
+                            <option value="near_expiry" {% if request.GET.status == 'near_expiry' %}selected{% endif %}>{{ "وشك الانتهاء"|smart_trans }} (Warning)</option>
+                            <option value="expired" {% if request.GET.status == 'expired' %}selected{% endif %}>{{ "تالف / منتهي"|smart_trans }} (Expired)</option>
+                        </select>
+                    </div>
+
+                    <!-- Buttons -->
+                    <div class="col-md-2 d-flex align-items-end">
+                        <button type="submit" class="btn btn-primary w-100 me-2">{{ "تصفية"|smart_trans }}</button>
+                        <a href="{% url 'inventory:inventory_list' %}" class="btn btn-outline-secondary w-100">{{ "إعادة تعيين"|smart_trans }}</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+
         <div class="content-panel">
             <div class="table-responsive">
                 <table class="table table-hover align-middle">
@@ -44,11 +90,9 @@
                                     <span class="text-danger fw-bold">منتهي منذ {{ item.days_remaining|stringformat:"+d"|slice:"1:" }} يوم</span>
                                 {% elif item.days_remaining == 0 %}
                                 <span class="text-danger fw-bold">{{ "ينتهي اليوم!"|smart_trans }}</span>
-                                {% elif item.days_remaining <= 3 %} <span class="text-warning fw-bold">{{
-                                    "باقي"|smart_trans }} {{ item.days_remaining }} {{ "أيام"|smart_trans }}</span>
+                                {% elif item.days_remaining <= 3 %} <span class="text-warning fw-bold">{{ "باقي"|smart_trans }} {{ item.days_remaining }} {{ "أيام"|smart_trans }}</span>
                                     {% else %}
-                                    <span class="text-success fw-bold">{{ "باقي"|smart_trans }} {{ item.days_remaining
-                                        }} {{ "يوم"|smart_trans }}</span>
+                                    <span class="text-success fw-bold">{{ "باقي"|smart_trans }} {{ item.days_remaining }} {{ "يوم"|smart_trans }}</span>
                                     {% endif %}
                         </td>
                         <td>
@@ -81,8 +125,7 @@
                     <tr>
                         <td colspan="7" class="text-center py-5">
                             <h5 class="fw-bold text-muted">{{ "المخزون فارغ حالياً"|smart_trans }}</h5>
-                            <a href="{% url 'inventory:add_stock_item' %}" class="btn btn-primary mt-2">{{ "إضافة أول
-                                منتج"|smart_trans }}</a>
+                            <a href="{% url 'inventory:add_stock_item' %}" class="btn btn-primary mt-2">{{ "إضافة أول منتج"|smart_trans }}</a>
                         </td>
                     </tr>
                     {% endfor %}

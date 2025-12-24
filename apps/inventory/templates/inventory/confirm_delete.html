@@ -20,8 +20,7 @@
             {% csrf_token %}
             <div class="mt-4">
                 <button type="submit" class="btn btn-danger px-4">{{ "نعم، احذف"|smart_trans }}</button>
-                <a href="{% url 'inventory:inventory_list' %}" class="btn btn-secondary px-4">{{ "تراجع"|smart_trans
-                    }}</a>
+                <a href="{% url 'inventory:inventory_list' %}" class="btn btn-secondary px-4">{{ "تراجع"|smart_trans }}</a>
             </div>
         </form>
     </div>

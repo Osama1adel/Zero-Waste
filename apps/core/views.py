@@ -13,6 +13,11 @@ import datetime
 from django.contrib.auth import get_user_model
 from django.core.exceptions import PermissionDenied
 
+def landing_page(request):
+    if request.user.is_authenticated:
+        return redirect('core:dashboard')
+    return render(request, 'core/landing_page.html', {})
+
 # --- DASHBOARD ROUTER ---
 def dashboard_router(request):
     if not request.user.is_authenticated:
@@ -77,6 +82,7 @@ def _company_dashboard(request):
         'user_role': 'General Manager',
         'company': company,
         'branches': branches,
+        'total_branches': branches.count(),
         'total_waste': total_waste_cost,
         'pending_requests': total_requests,
         'low_stock_items': low_stock_items,
@@ -90,10 +96,11 @@ def _company_dashboard(request):
 # --- BRANCH DASHBOARD ---
 def _branch_dashboard(request):
     # Check if user has a branch
-    if not hasattr(request.user, 'branch') or not request.user.branch:
+    # Check if user has a branch
+    if not hasattr(request.user, 'managed_branch') or not request.user.managed_branch:
         return render(request, 'core/dashboard_empty.html', {'error': 'No branch assigned'})
     
-    branch = request.user.branch
+    branch = request.user.managed_branch
 
     # Stats
     total_waste = WasteReport.objects.filter(branch=branch).aggregate(Sum('total_waste_value'))['total_waste_value__sum'] or 0
@@ -111,6 +118,9 @@ def _branch_dashboard(request):
     low_stock_count = StockItem.objects.filter(branch=branch, quantity__lte=F('product__minimum_quantity')).count()
     unread_count = UserNotification.objects.filter(user=request.user, is_read=False).count() + low_stock_count
 
+    # Requests
+    my_requests = OperationalRequest.objects.filter(branch=branch).order_by('-created_at')[:5]
+
     context = {
         'user_role': 'Branch Manager',
         'branch': branch,
@@ -120,6 +130,7 @@ def _branch_dashboard(request):
         'expiring_items': expiring_soon,
         'notifications': notifications,
         'unread_notifications_count': unread_count,
+        'my_requests': my_requests,
     }
     return render(request, 'core/dashboard_branch.html', context)
 
@@ -137,9 +148,17 @@ def branch_list(request):
     except Exception:
          branches = Branch.objects.none()
 
+    # Search Filter
+    search_query = request.GET.get('search', '')
+    if search_query:
+        branches = branches.filter(
+            Q(name__icontains=search_query) | 
+            Q(location__icontains=search_query)
+        )
+
     context = {
         'branches': branches,
-        'branch_form': BranchForm()
+        'branch_form': BranchForm(user=request.user)
     }
     return render(request, 'core/branch_list.html', context)
 
@@ -152,7 +171,7 @@ def add_branch_view(request):
         return redirect('core:branch_list')
 
     if request.method == 'POST':
-        form = BranchForm(request.POST)
+        form = BranchForm(request.POST, user=request.user)
         if form.is_valid():
             branch = form.save(commit=False)
             
@@ -171,6 +190,8 @@ def add_branch_view(request):
 
             if hasattr(request.user, 'managed_company'):
                 branch.company = request.user.managed_company
+            elif form.cleaned_data.get('company'):
+                branch.company = form.cleaned_data['company']
             
             branch.save()
             messages.success(request, f"تم إضافة الفرع '{branch.name}' بنجاح.")

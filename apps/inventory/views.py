@@ -23,9 +23,41 @@ def inventory_list(request):
     elif not request.user.is_superuser:
          stock_items = stock_items.none() # منع الوصول لأي شخص آخر
 
+    # --- Filtering Logic ---
+    search_query = request.GET.get('search', '')
+    if search_query:
+        stock_items = stock_items.filter(product__name__icontains=search_query)
+
+    branch_id = request.GET.get('branch')
+    if branch_id and (request.user.role == 'manager' or request.user.is_superuser):
+        stock_items = stock_items.filter(branch_id=branch_id)
+        
+    status_filter = request.GET.get('status')
+    today = date.today()
+    if status_filter == 'expired':
+        stock_items = stock_items.filter(expiry_date__lt=today)
+    elif status_filter == 'near_expiry':
+        # items expiring in next 3 days
+        from datetime import timedelta
+        three_days_later = today + timedelta(days=3)
+        stock_items = stock_items.filter(expiry_date__gte=today, expiry_date__lte=three_days_later)
+    elif status_filter == 'safe':
+         from datetime import timedelta
+         three_days_later = today + timedelta(days=3)
+         stock_items = stock_items.filter(expiry_date__gt=three_days_later)
+
+    # Get branches for filter dropdown (Managers/Superusers only)
+    branches = []
+    if request.user.is_superuser:
+        from apps.core.models import Branch
+        branches = Branch.objects.all()
+    elif request.user.role == 'manager' and hasattr(request.user, 'managed_company'):
+        branches = request.user.managed_company.branches.all()
+
     context = {
         'stock_items': stock_items, 
         'today': date.today(),
+        'branches': branches,
     }
     return render(request, 'inventory/list.html', context)
 

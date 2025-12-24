@@ -30,6 +30,7 @@ SECRET_KEY = 'django-insecure-&gnx(t+)s_m87!c219)1107ueuo7z=k$03h@3i)u#$kw*rgx8u
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
+
 ALLOWED_HOSTS = []
 
 # settings.py
@@ -174,14 +175,7 @@ STATICFILES_DIRS = [
 # إذا صارت False، النظام سيحاول الاتصال بـ Foodics API
 USE_MOCK_API = True
 
-# Email Configuration
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'smtp.gmail.com'
-EMAIL_PORT = 587
-EMAIL_USE_TLS = True
-EMAIL_HOST_USER = os.environ.get('EMAIL_USER')
-EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_PASSWORD')
-DEFAULT_FROM_EMAIL = f'Zero Waste System <{EMAIL_HOST_USER}>'
+
 
 LOGIN_REDIRECT_URL = 'core:dashboard'
 
@@ -190,3 +184,12 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Google Gemini API Key
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
+
+# Email Configuration
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = os.environ.get('EMAIL_USER')
+EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_PASSWORD')
+DEFAULT_FROM_EMAIL = f'Zero Waste System <{EMAIL_HOST_USER}>'

@@ -32,7 +32,7 @@
             <div class="stat-card" style="border-right-color: #e74c3c;">
                 <div>
                     <p class="text-muted mb-1 fw-bold">خطر الهدر الحالي</p>
-                    <h2 class="fw-bold mb-0 text-danger">{{ total_potential_loss }} ر.س</h2>
+                    <h2 class="fw-bold mb-0 text-danger">{{ total_waste }} ر.س</h2>
                 </div>
                 <div class="icon-box bg-danger bg-opacity-10 text-danger">
                     <i class="bi bi-shield-exclamation"></i>
@@ -106,8 +106,7 @@
                                 <h6 class="mb-1 fw-bold small">{{ notification.title }}</h6>
                                 <p class="mb-1 small text-muted">{{ notification.message|truncatewords:8 }}</p>
                                 <div class="d-flex justify-content-between align-items-center mt-1">
-                                    <small class="text-muted" style="font-size: 0.7rem;">{{
-                                        notification.created_at|timesince }} مضت</small>
+                                    <small class="text-muted" style="font-size: 0.7rem;">{{ notification.created_at|timesince }} مضت</small>
                                     <a href="{% url 'notifications:detail' notification.id %}"
                                         class="btn btn-sm btn-outline-primary py-0 px-1" style="font-size: 0.7rem;">
                                         <i class="bi bi-eye"></i> عرض

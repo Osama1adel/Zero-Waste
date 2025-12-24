@@ -61,9 +61,7 @@
                     onchange="this.form.submit()">
                     <option value="">{{ "كل الشركات"|smart_trans }}</option>
                     {% for company in companies %}
-                    <option value="{{ company.id }}" {% if
-                        selected_company|stringformat:"s"==company.id|stringformat:"s" %}selected{% endif %}>{{
-                        company.name }}</option>
+                        <option value="{{ company.id }}" {% if selected_company|stringformat:"s" == company.id|stringformat:"s" %}selected{% endif %}>{{ company.name }}</option>
                     {% endfor %}
                 </select>
                 {% endif %}
@@ -73,8 +71,7 @@
                     onchange="this.form.submit()">
                     <option value="">{{ "كل الفروع"|smart_trans }}</option>
                     {% for branch in branches %}
-                    <option value="{{ branch.id }}" {% if selected_branch|stringformat:"s"==branch.id|stringformat:"s"
-                        %}selected{% endif %}>{{ branch.name }}</option>
+                    <option value="{{ branch.id }}" {% if selected_branch|stringformat:"s" == branch.id|stringformat:"s" %}selected{% endif %}>{{ branch.name }}</option>
                     {% endfor %}
                 </select>
                 {% endif %}
@@ -114,14 +111,11 @@
                             <td class="text-muted small">{{ req.created_at|date:"Y-m-d H:i" }}</td>
                             <td>
                                 {% if req.status == 'PENDING' %}
-                                <span class="badge bg-warning text-dark bg-opacity-25 border border-warning">{{ "قيد
-                                    المراجعة"|smart_trans }}</span>
+                                <span class="badge bg-warning text-dark bg-opacity-25 border border-warning">{{ "قيدالمراجعة"|smart_trans }}</span>
                                 {% elif req.status == 'APPROVED' %}
-                                <span class="badge bg-success bg-opacity-10 text-success border border-success">{{ "تمت
-                                    الموافقة"|smart_trans }}</span>
+                                <span class="badge bg-success bg-opacity-10 text-success border border-success">{{ "تمت الموافقة"|smart_trans }}</span>
                                 {% else %}
-                                <span class="badge bg-danger bg-opacity-10 text-danger border border-danger">{{
-                                    "مرفوض"|smart_trans }}</span>
+                                <span class="badge bg-danger bg-opacity-10 text-danger border border-danger">{{"مرفوض"|smart_trans }}</span>
                                 {% endif %}
                             </td>
                             <td class="text-break" style="max-width: 200px;">
@@ -189,8 +183,7 @@
                 <p id="detailsModalContent" class="text-break"></p>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ "إغلاق"|smart_trans
-                    }}</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ "إغلاق"|smart_trans }}</button>
             </div>
         </div>
     </div>
@@ -225,8 +218,7 @@
                     {% endif %}
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ "إغلاق"|smart_trans
-                        }}</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ "إغلاق"|smart_trans }}</button>
                     <button type="submit" class="btn btn-primary">{{ "إرسال التقرير"|smart_trans }}</button>
                 </div>
             </form>
@@ -248,10 +240,8 @@
                     placeholder="{{ 'اكتب ردك هنا...'|smart_trans }}"></textarea>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-success" onclick="submitReply('approve')">{{ "موافق
-                    ورد"|smart_trans }}</button>
-                <button type="button" class="btn btn-secondary" onclick="submitReply('updated')">{{ "إرسال الرد
-                    فقط"|smart_trans }}</button>
+                <button type="button" class="btn btn-success" onclick="submitReply('approve')">{{ "موافق ورد"|smart_trans }}</button>
+                <button type="button" class="btn btn-secondary" onclick="submitReply('updated')">{{ "إرسال الرد فقط"|smart_trans }}</button>
             </div>
         </div>
     </div>

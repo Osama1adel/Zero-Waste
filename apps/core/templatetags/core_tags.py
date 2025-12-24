@@ -197,6 +197,7 @@ TRANSLATIONS = {
         'كلمة المرور': 'Password',
         'تسجيل الدخول': 'Login',
         'للإنضمام، يرجى التواصل مع الإدارة': 'To join, please contact management',
+        'مدير النظام': 'System Manager',
     }
 }
 

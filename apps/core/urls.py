@@ -7,7 +7,8 @@ from .saas_notifications_views import saas_notifications_center, send_saved_noti
 app_name = 'core'
 
 urlpatterns = [
-    path('', views.dashboard_router, name='dashboard'), # الرابط الرئيسي (Router)
+    path('', views.landing_page, name='landing'), # الرابط الرئيسي (Router)
+    path('dashboard/', views.dashboard_router, name='dashboard'), # الرابط الرئيسي (Router)
     path('company/add/', views.add_company_view, name='add_company'), # رابط إضافة شركة
     path('api/chart-data/', views.chart_data_api, name='chart_data_api'),
     path('branches/', views.branch_list, name='branch_list'),

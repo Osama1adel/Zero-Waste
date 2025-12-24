@@ -7,7 +7,13 @@
             {{ user.username }}
         </div>
         <div class="text-white-50" style="font-size: 0.75rem;">
-            {% if user.get_full_name %}{{ user.get_full_name }}{% else %}{{ user.get_role_display }}{% endif %}
+            {% if user.is_superuser %}
+                {{ "مدير النظام"|smart_trans }}
+            {% elif user.get_full_name %}
+                {{ user.get_full_name }}
+            {% else %}
+                {{ user.get_role_display }}
+            {% endif %}
         </div>
     </div>
 

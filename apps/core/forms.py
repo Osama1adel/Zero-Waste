@@ -61,6 +61,16 @@ class BranchForm(forms.ModelForm):
         widget=forms.PasswordInput(attrs={'class': 'form-control', 'placeholder': '******'})
     )
 
+    def __init__(self, *args, **kwargs):
+        user = kwargs.pop('user', None)
+        super().__init__(*args, **kwargs)
+        if user and user.is_superuser:
+            self.fields['company'] = forms.ModelChoiceField(
+                queryset=RestaurantCompany.objects.all(),
+                label="الشركة التابعة",
+                widget=forms.Select(attrs={'class': 'form-select'})
+            )
+
     class Meta:
         model = Branch
         fields = ['name', 'location', 'waste_threshold'] # Removed manager
